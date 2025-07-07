@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seilzieh Turnier</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 800px;
+      margin: auto;
+      padding: 1em;
+      background: url('https://images.unsplash.com/photo-1521412644187-c49fa049e84d?auto=format&fit=crop&w=1950&q=80');
+      background-size: cover;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+      background-position: center;
+      color: #fff;
+      text-shadow: 1px 1px 2px #000;
+    }
+    h2 { margin-top: 2em; }
+    .group, .match { margin: 1em 0; }
+    button { margin-top: 1em; }
+    select { margin-left: 1em; }
+    .hidden { display: none; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1em; }
+    th, td { border: 1px solid #ccc; padding: 0.5em; text-align: center; background-color: rgba(255, 255, 255, 0.8); color: #000; }
+  </style>
+</head>
+<body>
+  <h1>Seilzieh Turnier</h1>
+
+  <div id="team-input">
+    <h2>1. Teams eingeben (2–40)</h2>
+    <textarea id="teams" rows="20" cols="40" placeholder="Ein Team pro Zeile"></textarea><br>
+    <button onclick="startTournament()">Turnier starten</button>
+  </div>
+
+  <div id="group-phase" class="hidden">
+    <h2>2. Gruppenphase</h2>
+    <div id="groups"></div>
+    <button onclick="checkGroupPhaseDone()">Gruppenphase abschließen</button>
+  </div>
+
+  <div id="ko-phase" class="hidden">
+    <h2>3. KO-Phase</h2>
+    <div id="ko-rounds"></div>
+  </div>
+
+  <div id="winner" class="hidden">
+    <h2>🏆 Sieger des Turniers</h2>
+    <p id="final-winner"></p>
+  </div>
+
+  <script>
+    let teams = [];
+    let groups = { A: [], B: [], C: [], D: [] };
+    let groupResults = {};
+    let matches = [];
+
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function startTournament() {
+      const input = document.getElementById("teams").value.trim().split("\n").map(t => t.trim()).filter(t => t);
+      if (input.length < 2 || input.length > 40) {
+        alert("Bitte zwischen 2 und 40 Teams eingeben.");
+        return;
+      }
+      teams = shuffle(input);
+      // Gruppen füllen
+      const numGroups = 4;
+      groups = {};
+      for (let i = 0; i < numGroups; i++) {
+        groups[String.fromCharCode(65 + i)] = [];
+      }
+      for (let i = 0; i < teams.length; i++) {
+        groups[String.fromCharCode(65 + (i % numGroups))].push(teams[i]);
+      }
+      generateGroupMatches();
+      document.getElementById("team-input").classList.add("hidden");
+      document.getElementById("group-phase").classList.remove("hidden");
+    }
+
+    function generateGroupMatches() {
+      const container = document.getElementById("groups");
+      container.innerHTML = "";
+      matches = [];
+      for (const [group, members] of Object.entries(groups)) {
+        const groupDiv = document.createElement("div");
+        groupDiv.className = "group";
+        groupDiv.innerHTML = `<h3>Gruppe ${group}</h3>`;
+
+        for (let i = 0; i < members.length; i++) {
+          for (let j = i + 1; j < members.length; j++) {
+            const m1 = members[i], m2 = members[j];
+            const matchDiv = document.createElement("div");
+            matchDiv.className = "match";
+            const select = document.createElement("select");
+            select.innerHTML = `<option value="">- Gewinner wählen -</option>
+                                <option value="${m1}">${m1}</option>
+                                <option value="${m2}">${m2}</option>`;
+            matchDiv.innerHTML = `${m1} vs ${m2}`;
+            matchDiv.appendChild(select);
+            groupDiv.appendChild(matchDiv);
+            matches.push({ group, team1: m1, team2: m2, select });
+          }
+        }
+        container.appendChild(groupDiv);
+      }
+    }
+
+    function checkGroupPhaseDone() {
+      if (matches.some(m => m.select.value === "")) {
+        alert("Bitte alle Gruppenspiele auswerten.");
+        return;
+      }
+
+      groupResults = {};
+      for (const group of Object.keys(groups)) {
+        groupResults[group] = {};
+        for (const team of groups[group]) {
+          groupResults[group][team] = 0;
+        }
+      }
+
+      for (const m of matches) {
+        groupResults[m.group][m.select.value] += 2;
+      }
+
+      document.getElementById("group-phase").classList.add("hidden");
+      document.getElementById("ko-phase").classList.remove("hidden");
+      generateKORound();
+    }
+
+    function generateKORound() {
+      const koContainer = document.getElementById("ko-rounds");
+      koContainer.innerHTML = "<h3>Viertelfinale</h3>";
+      let quarterFinalists = [];
+      for (const group of Object.keys(groupResults)) {
+        const teams = Object.entries(groupResults[group])
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 2)
+          .map(e => e[0]);
+        quarterFinalists.push({ group, first: teams[0], second: teams[1] });
+      }
+
+      const matchups = [
+        [quarterFinalists[0].first, quarterFinalists[1].second],
+        [quarterFinalists[1].first, quarterFinalists[0].second],
+        [quarterFinalists[2].first, quarterFinalists[3].second],
+        [quarterFinalists[3].first, quarterFinalists[2].second],
+      ];
+
+      handleKOStage(matchups, "Halbfinale", (semis) => {
+        handleKOStage(semis, "Finale", (final) => {
+          const winner = document.createElement("select");
+          winner.innerHTML = `<option value="">- Gewinner wählen -</option>
+                              <option value="${final[0][0]}">${final[0][0]}</option>
+                              <option value="${final[0][1]}">${final[0][1]}</option>`;
+          const div = document.createElement("div");
+          div.innerHTML = `${final[0][0]} vs ${final[0][1]}`;
+          div.appendChild(winner);
+          koContainer.appendChild(document.createElement("h3")).innerText = "Finale";
+          koContainer.appendChild(div);
+
+          const btn = document.createElement("button");
+          btn.textContent = "Finale abschließen";
+          btn.onclick = () => {
+            if (!winner.value) return alert("Bitte Gewinner wählen");
+            document.getElementById("ko-phase").classList.add("hidden");
+            document.getElementById("winner").classList.remove("hidden");
+            document.getElementById("final-winner").innerText = winner.value;
+          };
+          koContainer.appendChild(btn);
+        });
+      });
+    }
+
+    function handleKOStage(matchups, nextTitle, callback) {
+      const container = document.getElementById("ko-rounds");
+      let title = matchups.length === 4 ? "Viertelfinale" : matchups.length === 2 ? "Halbfinale" : nextTitle;
+      container.appendChild(document.createElement("h3")).innerText = title;
+      let winners = [];
+      let selects = [];
+
+      for (const [team1, team2] of matchups) {
+        const div = document.createElement("div");
+        div.innerHTML = `${team1} vs ${team2}`;
+        const select = document.createElement("select");
+        select.innerHTML = `<option value="">- Gewinner wählen -</option>
+                            <option value="${team1}">${team1}</option>
+                            <option value="${team2}">${team2}</option>`;
+        div.appendChild(select);
+        container.appendChild(div);
+        selects.push({ select, team1, team2 });
+      }
+
+      const btn = document.createElement("button");
+      btn.textContent = `${title} abschließen`;
+      btn.onclick = () => {
+        if (selects.some(s => !s.select.value)) {
+          alert("Bitte alle Sieger wählen.");
+          return;
+        }
+        winners = selects.map(s => s.select.value);
+        const newMatchups = [];
+        for (let i = 0; i < winners.length; i += 2) {
+          newMatchups.push([winners[i], winners[i + 1]]);
+        }
+        callback(newMatchups);
+      };
+      container.appendChild(btn);
+    }
+  </script>
+</body>
+</html>
