@@ -58,17 +58,17 @@
 
   <div id="team-input">
     <h2>1. Teams eingeben (2–40)</h2>
-    <input type="text" id="team-name" placeholder="Teamname eingeben"
-           onkeydown="if(event.key==='Enter') addTeam()" />
+    <input type="text" id="team-name" placeholder="Teamname eingeben" onkeydown="if(event.key==='Enter') addTeam()" />
     <button onclick="addTeam()">Hinzufügen</button>
     <button onclick="startTournament()">Turnier starten</button>
+    <button onclick="resetTournament()">Neu starten</button>
     <div id="team-list"></div>
   </div>
 
   <div id="group-phase" class="hidden">
     <h2>2. Gruppenphase</h2>
     <div id="groups"></div>
-    <button onclick="checkGroupPhaseDone()">Gruppenphase abschließen</button>
+    <button onclick="generateKoPhase()">Gruppenphase abschließen</button>
   </div>
 
   <div id="ko-phase" class="hidden">
@@ -82,10 +82,16 @@
   </div>
 
   <script>
-    let teams = [];
-    let groups = {};
-    let groupResults = {};
-    let matches = [];
+    let teams = JSON.parse(localStorage.getItem("teams")) || [];
+    let groupResults = JSON.parse(sessionStorage.getItem("groupResults")) || {};
+
+    function saveTeams() {
+      localStorage.setItem("teams", JSON.stringify(teams));
+    }
+
+    function saveGroupResults() {
+      sessionStorage.setItem("groupResults", JSON.stringify(groupResults));
+    }
 
     function addTeam() {
       const input = document.getElementById("team-name");
@@ -93,20 +99,154 @@
       if (name && teams.length < 40 && !teams.includes(name)) {
         teams.push(name);
         input.value = "";
+        saveTeams();
         renderTeamList();
       }
     }
 
     function removeTeam(index) {
       teams.splice(index, 1);
+      saveTeams();
       renderTeamList();
     }
 
     function renderTeamList() {
       const listDiv = document.getElementById("team-list");
       listDiv.innerHTML = `<strong>Teams (${teams.length}):</strong><ul>` +
-        teams.map((t, i) => `<li>${t} <button onclick="removeTeam(${i})">x</button></li>`).join("") +
-        "</ul>";
+        teams.map((t, i) => `<li>${t} <button onclick="removeTeam(${i})">x</button></li>`).join("") + "</ul>";
+    }
+
+    function resetTournament() {
+      localStorage.removeItem("teams");
+      sessionStorage.clear();
+      location.reload();
+    }
+
+    function generateGroupPhase(groups) {
+      document.getElementById("team-input").classList.add("hidden");
+      document.getElementById("group-phase").classList.remove("hidden");
+      const container = document.getElementById("groups");
+      container.innerHTML = "";
+      for (const [group, members] of Object.entries(groups)) {
+        const groupDiv = document.createElement("div");
+        groupDiv.className = "group";
+        groupDiv.innerHTML = `<h3>Gruppe ${group}</h3>`;
+
+        if (!groupResults[group]) groupResults[group] = {};
+        members.forEach(m => { if (!groupResults[group][m]) groupResults[group][m] = 0; });
+
+        const table = document.createElement("table");
+        table.innerHTML = `<thead><tr><th>Team</th><th>Punkte</th></tr></thead><tbody id="table-${group}"></tbody>`;
+        groupDiv.appendChild(table);
+
+        updateGroupTable(group);
+
+        members.forEach((teamA, i) => {
+          for (let j = i + 1; j < members.length; j++) {
+            const teamB = members[j];
+            const matchId = `${group}-${teamA}-vs-${teamB}`;
+            const matchDiv = document.createElement("div");
+            matchDiv.className = "match";
+            const label = document.createElement("label");
+            label.textContent = `${teamA} vs ${teamB}`;
+            const select = document.createElement("select");
+            select.innerHTML = `<option value="">- Gewinner wählen -</option>
+                                <option value="${teamA}">${teamA}</option>
+                                <option value="${teamB}">${teamB}</option>`;
+            if (sessionStorage.getItem(matchId)) {
+              select.value = sessionStorage.getItem(matchId);
+              select.disabled = true;
+            }
+            select.onchange = () => {
+              groupResults[group][select.value] += 2;
+              updateGroupTable(group);
+              saveGroupResults();
+              sessionStorage.setItem(matchId, select.value);
+              select.disabled = true;
+            };
+            matchDiv.appendChild(label);
+            matchDiv.appendChild(select);
+            groupDiv.appendChild(matchDiv);
+          }
+        });
+        container.appendChild(groupDiv);
+      }
+    }
+
+    function updateGroupTable(group) {
+      const sorted = Object.entries(groupResults[group]).sort((a, b) => b[1] - a[1]);
+      const tbody = document.getElementById(`table-${group}`);
+      tbody.innerHTML = sorted.map(([team, points]) => `<tr><td>${team}</td><td>${points}</td></tr>`).join("");
+    }
+
+    function generateKoPhase() {
+      const groups = JSON.parse(sessionStorage.getItem("groups"));
+      const koTeams = [];
+      for (const group of Object.keys(groups)) {
+        const sorted = Object.entries(groupResults[group]).sort((a,b)=>b[1]-a[1]);
+        if (sorted[0]) koTeams.push(sorted[0][0]);
+        if (sorted[1]) koTeams.push(sorted[1][0]);
+      }
+      document.getElementById("ko-phase").classList.remove("hidden");
+      const container = document.getElementById("ko-rounds");
+      container.innerHTML = "";
+
+      function createRound(title, matches, nextCallback) {
+        const section = document.createElement("div");
+        section.innerHTML = `<h3>${title}</h3>`;
+        matches.forEach(([teamA, teamB], index) => {
+          const matchDiv = document.createElement("div");
+          matchDiv.className = "match";
+          const label = document.createElement("label");
+          label.textContent = `${teamA} vs ${teamB}`;
+          const select = document.createElement("select");
+          select.innerHTML = `<option value="">- Gewinner wählen -</option>
+                              <option value="${teamA}">${teamA}</option>
+                              <option value="${teamB}">${teamB}</option>`;
+          select.onchange = () => {
+            select.disabled = true;
+            results.push({ match: [teamA, teamB], winner: select.value });
+            if (results.length === matches.length) nextCallback(results);
+          };
+          matchDiv.appendChild(label);
+          matchDiv.appendChild(select);
+          section.appendChild(matchDiv);
+        });
+        container.appendChild(section);
+      }
+
+      const results = [];
+      const quarter = [];
+      for (let i = 0; i < koTeams.length; i += 2) {
+        if (koTeams[i + 1]) quarter.push([koTeams[i], koTeams[i + 1]]);
+      }
+
+      createRound("Viertelfinale", quarter, (winnersQF) => {
+        const semi = [];
+        for (let i = 0; i < winnersQF.length; i += 2) {
+          if (winnersQF[i + 1]) semi.push([winnersQF[i].winner, winnersQF[i + 1].winner]);
+        }
+        createRound("Halbfinale", semi, (winnersSF) => {
+          const finalMatch = [winnersSF[0].winner, winnersSF[1].winner];
+          const loserMatch = [
+            winnersSF[0].match.find(t => t !== winnersSF[0].winner),
+            winnersSF[1].match.find(t => t !== winnersSF[1].winner)
+          ];
+          createRound("Spiel um Platz 3", [loserMatch], () => {});
+          createRound("Finale", [finalMatch], (finalWinners) => {
+            document.getElementById("winner").classList.remove("hidden");
+            document.getElementById("final-winner").textContent = `Sieger: ${finalWinners[0].winner}`;
+          });
+        });
+      });
+    }
+
+    window.onload = () => {
+      renderTeamList();
+      const storedGroups = sessionStorage.getItem("groups");
+      if (storedGroups) {
+        generateGroupPhase(JSON.parse(storedGroups));
+      }
     }
 
     function startTournament() {
@@ -115,157 +255,15 @@
         return;
       }
       const numGroups = 4;
-      groups = {};
+      const groups = {};
       for (let i = 0; i < numGroups; i++) {
         groups[String.fromCharCode(65 + i)] = [];
       }
       for (let i = 0; i < teams.length; i++) {
         groups[String.fromCharCode(65 + (i % numGroups))].push(teams[i]);
       }
-      generateGroupMatches();
-      document.getElementById("team-input").classList.add("hidden");
-      document.getElementById("group-phase").classList.remove("hidden");
-    }
-
-    function generateGroupMatches() {
-      const container = document.getElementById("groups");
-      container.innerHTML = "";
-      matches = [];
-      groupResults = {};
-      for (const [group, members] of Object.entries(groups)) {
-        const groupDiv = document.createElement("div");
-        groupDiv.className = "group";
-        groupResults[group] = {};
-        members.forEach(m => groupResults[group][m] = 0);
-
-        groupDiv.innerHTML = `<h3>Gruppe ${group}</h3>`;
-
-        const table = document.createElement("table");
-        table.innerHTML = `<thead><tr><th>Team</th><th>Punkte</th></tr></thead>
-                           <tbody id="table-${group}">` +
-          members.map(t => `<tr id="row-${group}-${t.replace(/\\s/g,'_')}">
-                             <td>${t}</td><td>0</td></tr>`).join("") + "</tbody>";
-        groupDiv.appendChild(table);
-
-        members.forEach((m1, i) => {
-          for (let j = i + 1; j < members.length; j++) {
-            const m2 = members[j];
-            const matchDiv = document.createElement("div");
-            matchDiv.className = "match";
-            const select = document.createElement("select");
-            select.innerHTML = `<option value="">- Gewinner wählen -</option>
-                                <option value="${m1}">${m1}</option>
-                                <option value="${m2}">${m2}</option>`;
-            matchDiv.innerHTML = `${m1} vs ${m2}`;
-            matchDiv.appendChild(select);
-            select.onchange = () => {
-              groupResults[group][select.value] += 2;
-              updateGroupTable(group);
-              select.disabled = true;
-            };
-            groupDiv.appendChild(matchDiv);
-            matches.push({ group, team1: m1, team2: m2, select });
-          }
-        });
-        container.appendChild(groupDiv);
-      }
-    }
-
-    function updateGroupTable(group) {
-      const sorted = Object.entries(groupResults[group])
-        .sort((a, b) => b[1] - a[1]);
-      const tbody = document.getElementById(`table-${group}`);
-      tbody.innerHTML = sorted.map(([team, points]) =>
-        `<tr id="row-${group}-${team.replace(/\\s/g,'_')}"><td>${team}</td><td>${points}</td></tr>`
-      ).join("");
-    }
-
-    function checkGroupPhaseDone() {
-      if (matches.some(m => m.select.value === "")) {
-        alert("Bitte alle Gruppenspiele auswerten.");
-        return;
-      }
-      document.getElementById("group-phase").classList.add("hidden");
-      document.getElementById("ko-phase").classList.remove("hidden");
-      generateKORound();
-    }
-
-    function generateKORound() {
-      const koContainer = document.getElementById("ko-rounds");
-      koContainer.innerHTML = "<h3>KO-Runde</h3>";
-      let finalists = [];
-      for (const group of Object.keys(groupResults)) {
-        const teams = Object.entries(groupResults[group])
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 2)
-          .map(e => e[0]);
-        finalists.push(...teams);
-      }
-      const matchups = [];
-      for (let i = 0; i < finalists.length; i += 2) {
-        if (finalists[i + 1]) {
-          matchups.push([finalists[i], finalists[i + 1]]);
-        }
-      }
-      handleKOStage(matchups, "Finale", (final) => {
-        const winner = document.createElement("select");
-        winner.innerHTML = `<option value="">- Gewinner wählen -</option>
-                            <option value="${final[0][0]}">${final[0][0]}</option>
-                            <option value="${final[0][1]}">${final[0][1]}</option>`;
-        const div = document.createElement("div");
-        div.innerHTML = `${final[0][0]} vs ${final[0][1]}`;
-        div.appendChild(winner);
-        koContainer.appendChild(document.createElement("h3")).innerText = "Finale";
-        koContainer.appendChild(div);
-
-        const btn = document.createElement("button");
-        btn.textContent = "Finale abschließen";
-        btn.onclick = () => {
-          if (!winner.value) return alert("Bitte Gewinner wählen");
-          document.getElementById("ko-phase").classList.add("hidden");
-          document.getElementById("winner").classList.remove("hidden");
-          document.getElementById("final-winner").innerText = winner.value;
-        };
-        koContainer.appendChild(btn);
-      });
-    }
-
-    function handleKOStage(matchups, nextTitle, callback) {
-      const container = document.getElementById("ko-rounds");
-      let title = matchups.length === 4 ? "Viertelfinale" :
-                  matchups.length === 2 ? "Halbfinale" : nextTitle;
-      container.appendChild(document.createElement("h3")).innerText = title;
-      let selects = [];
-
-      for (const [team1, team2] of matchups) {
-        const div = document.createElement("div");
-        div.innerHTML = `${team1} vs ${team2}`;
-        const select = document.createElement("select");
-        select.innerHTML = `<option value="">- Gewinner wählen -</option>
-                            <option value="${team1}">${team1}</option>
-                            <option value="${team2}">${team2}</option>`;
-        div.appendChild(select);
-        container.appendChild(div);
-        selects.push(select);
-      }
-
-      const btn = document.createElement("button");
-      btn.textContent = `${title} abschließen`;
-      btn.onclick = () => {
-        if (selects.some(s => !s.value)) {
-          alert("Bitte alle Sieger wählen.");
-          return;
-        }
-        const winners = selects.map(s => s.value);
-        const newMatchups = [];
-        for (let i = 0; i < winners.length; i += 2) {
-          if (winners[i + 1]) {
-            newMatchups.push([winners[i], winners[i + 1]]);
-          }
-        }
-        callback(newMatchups);
-      };
-      container.appendChild(btn);
+      sessionStorage.setItem("groups", JSON.stringify(groups));
+      location.reload();
     }
   </script>
 </body>
