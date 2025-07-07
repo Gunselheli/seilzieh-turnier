@@ -113,10 +113,69 @@
     <p id="final-winner"></p>
   </div>
 
-  <script>
+<script>
     const { jsPDF } = window.jspdf;
     let teams = JSON.parse(localStorage.getItem("teams")) || [];
     let groupResults = JSON.parse(sessionStorage.getItem("groupResults")) || {};
+
+    function addTeam() {
+      const input = document.getElementById("team-name");
+      const name = input.value.trim();
+      if (name && !teams.includes(name) && teams.length < 40) {
+        teams.push(name);
+        input.value = "";
+        localStorage.setItem("teams", JSON.stringify(teams));
+        renderTeamList();
+      }
+    }
+
+    function removeTeam(index) {
+      teams.splice(index, 1);
+      localStorage.setItem("teams", JSON.stringify(teams));
+      renderTeamList();
+    }
+
+    function renderTeamList() {
+      const listDiv = document.getElementById("team-list");
+      listDiv.innerHTML = `<strong>Teams (${teams.length}):</strong><ul>` +
+        teams.map((t, i) => `<li>${t} <button onclick="removeTeam(${i})">x</button></li>`).join("") + "</ul>";
+    }
+
+    function resetTournament() {
+      localStorage.removeItem("teams");
+      sessionStorage.clear();
+      location.reload();
+    }
+
+    window.onload = () => {
+      renderTeamList();
+
+      // Wenn Gruppen vorhanden sind, fortsetzen
+      const existingGroups = sessionStorage.getItem("groups");
+      if (existingGroups) {
+        showGroups(JSON.parse(existingGroups));
+      }
+    }
+
+    function downloadGroupSchedule() {
+      const doc = new jsPDF();
+      doc.setFontSize(14);
+      doc.text("Gruppen-Spielplan", 10, 10);
+      let y = 20;
+      const storedGroups = JSON.parse(sessionStorage.getItem("groups"));
+      for (const [group, members] of Object.entries(storedGroups)) {
+        doc.text(`Gruppe ${group}`, 10, y);
+        y += 6;
+        for (let i = 0; i < members.length; i++) {
+          for (let j = i + 1; j < members.length; j++) {
+            doc.text(`${members[i]} vs ${members[j]}`, 20, y);
+            y += 6;
+          }
+        }
+        y += 4;
+      }
+      doc.save("spielplan.pdf");
+    }
 
     function startTournament() {
       if (teams.length < 2 || teams.length > 40) {
@@ -137,8 +196,35 @@
         groupIndex = (groupIndex + 1) % numGroups;
       }
       sessionStorage.setItem("groups", JSON.stringify(groups));
-      location.reload();
+      showGroups(groups);
+    }
+
+    function showGroups(groups) {
+      document.getElementById("group-phase").classList.remove("hidden");
+      const container = document.getElementById("groups");
+      container.innerHTML = "";
+      for (const [group, members] of Object.entries(groups)) {
+        const section = document.createElement("section");
+        section.className = "group";
+        section.innerHTML = `<h3>Gruppe ${group}</h3>`;
+        const table = document.createElement("table");
+        const thead = document.createElement("thead");
+        thead.innerHTML = "<tr><th>Team</th><th>Punkte</th></tr>";
+        table.appendChild(thead);
+        const tbody = document.createElement("tbody");
+        members.forEach(team => {
+          const row = document.createElement("tr");
+          row.innerHTML = `<td>${team}</td><td>0</td>`;
+          tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
+        section.appendChild(table);
+        container.appendChild(section);
+      }
     }
   </script>
+</body>
+</html>
+
 </body>
 </html>
