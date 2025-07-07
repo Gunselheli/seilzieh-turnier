@@ -11,7 +11,6 @@
             color: #333;
             margin: 0;
             padding: 20px;
-            /* NEU: Hintergrundbild */
             background-image: url('background.png');
             background-size: cover;
             background-position: center;
@@ -21,7 +20,7 @@
         main {
             max-width: 1000px;
             margin: auto;
-            background: rgba(255, 255, 255, 0.95); /* Leicht transparenter Hintergrund für bessere Lesbarkeit */
+            background: rgba(255, 255, 255, 0.92); /* Leicht transparenter Hauptcontainer */
             padding: 20px 30px;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
@@ -41,7 +40,7 @@
         #addTeamBtn { background-color: #2ecc71; color: white; }
         #addTeamBtn:hover { background-color: #27ae60; }
         #teamList { list-style: none; padding: 0; }
-        #teamList li { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #ecf0f1; border-radius: 4px; margin-bottom: 5px; }
+        #teamList li { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(236, 240, 241, 0.85); border-radius: 4px; margin-bottom: 5px; }
         .delete-btn { background-color: #e74c3c; color: white; border-radius: 50%; width: 25px; height: 25px; line-height: 25px; text-align: center; font-size: 14px; }
         .delete-btn:hover { background-color: #c0392b; }
         
@@ -57,15 +56,18 @@
 
         /* Gruppen & KO-Phase Layout */
         #groupsContainer, #ko-phase > div { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px; }
-        .group-container, .ko-round { border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #f9f9f9; }
+        .group-container, .ko-round { border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: rgba(249, 249, 249, 0.85); /* NEU: Transparenter Hintergrund */ }
         .group-container h3, .ko-round h4 { margin-top: 0; border-color: #95a5a6; }
+        
+        /* Tabellen-Styling */
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #ecf0f1; }
-        
+        th { background-color: rgba(236, 240, 241, 0.7); /* NEU: Transparenter Header */ }
+        td { background-color: rgba(255, 255, 255, 0.5); /* NEU: Transparente Zellen */ }
+
         /* Match-Styling */
         .match-list { margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ccc; }
-        .match { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-radius: 4px; margin-bottom: 5px; background: #e9e9e9; }
+        .match { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-radius: 4px; margin-bottom: 5px; background: rgba(233, 233, 233, 0.8); /* NEU: Transparente Matches */ }
         .match-teams { font-weight: bold; }
         .match-winner-btns button { font-size: 12px; padding: 5px 8px; margin-left: 5px; background-color: #3498db; color: white; }
         .match-winner-btns button:disabled { background-color: #7f8c8d; cursor: not-allowed; }
@@ -120,57 +122,39 @@
             <div id="third-place-container" class="ko-round"><h4>Spiel um Platz 3</h4></div>
             <div id="final-container" class="ko-round"><h4>Finale</h4></div>
         </section>
-
     </main>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
 
-        // ##################################################################
-        // KONSTANTEN & DOKUMENTATION
-        // ##################################################################
         const MAX_TEAMS = 40;
-        const MAX_TEAMS_PER_GROUP = 4; // Geändert
+        const MAX_TEAMS_PER_GROUP = 4;
         const POINTS_PER_WIN = 2;
-
         const STORAGE_KEYS = {
             TEAMS: 'tournament_teams',
             DATA: 'tournament_data'
         };
 
-        // ##################################################################
-        // DOM ELEMENTE
-        // ##################################################################
         const teamNameInput = document.getElementById('teamNameInput');
         const addTeamBtn = document.getElementById('addTeamBtn');
         const teamList = document.getElementById('teamList');
         const startTournamentBtn = document.getElementById('startTournamentBtn');
         const resetTournamentBtn = document.getElementById('resetTournamentBtn');
         const advanceToKoBtn = document.getElementById('advanceToKoBtn');
-        
         const teamSetupSection = document.getElementById('team-setup');
         const groupPhaseSection = document.getElementById('group-phase');
         const koPhaseSection = document.getElementById('ko-phase');
         const groupsContainer = document.getElementById('groupsContainer');
-        const tournamentControls = document.getElementById('tournament-controls');
-
-        // KO-Runden Container
         const qfContainer = document.getElementById('quarter-finals-container');
         const sfContainer = document.getElementById('semi-finals-container');
         const thirdPlaceContainer = document.getElementById('third-place-container');
         const finalContainer = document.getElementById('final-container');
 
-        // ##################################################################
-        // SPEICHERFUNKTIONEN
-        // ##################################################################
         const getTeamsFromStorage = () => JSON.parse(localStorage.getItem(STORAGE_KEYS.TEAMS)) || [];
         const saveTeamsToStorage = (teams) => localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify(teams));
         const getTournamentData = () => JSON.parse(sessionStorage.getItem(STORAGE_KEYS.DATA)) || null;
         const saveTournamentData = (data) => sessionStorage.setItem(STORAGE_KEYS.DATA, JSON.stringify(data));
 
-        // ##################################################################
-        // TEAMVERWALTUNG
-        // ##################################################################
         const renderTeamList = () => {
             const teams = getTeamsFromStorage();
             teamList.innerHTML = '';
@@ -206,10 +190,6 @@
             renderTeamList();
         };
 
-        // ##################################################################
-        // TURNIER-LOGIK
-        // ##################################################################
-
         const shuffleArray = (array) => {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -231,14 +211,13 @@
         const startTournament = () => {
             const teams = getTeamsFromStorage();
             if (teams.length < 8) {
-                alert("Es werden mindestens 8 Teams für die Gruppen- und KO-Phase benötigt.");
+                alert("Es werden mindestens 8 Teams für die Gruppen- und KO-Phase benötigt. Ideal sind 13-16 Teams für ein Viertelfinale.");
                 return;
             }
 
             const shuffledTeams = shuffleArray([...teams]);
             const groups = [];
             let groupIndex = 0;
-
             for (let i = 0; i < shuffledTeams.length; i += MAX_TEAMS_PER_GROUP) {
                 const groupTeams = shuffledTeams.slice(i, i + MAX_TEAMS_PER_GROUP);
                 const standings = {};
@@ -246,20 +225,14 @@
                     standings[team] = { played: 0, wins: 0, points: 0 };
                 });
                 groups.push({
-                    name: String.fromCharCode(65 + groupIndex), // A, B, C...
+                    name: String.fromCharCode(65 + groupIndex++),
                     teams: groupTeams,
                     matches: generateGroupMatches(groupTeams),
                     standings: standings,
                 });
-                groupIndex++;
             }
             
-            const tournamentData = {
-                groups: groups,
-                ko_stage: null // KO-Phase wird später initialisiert
-            };
-
-            saveTournamentData(tournamentData);
+            saveTournamentData({ groups: groups, ko_stage: null });
             updateUI('group-phase');
         };
         
@@ -268,7 +241,7 @@
             const group = data.groups.find(g => g.name === groupName);
             const match = group.matches[matchIndex];
 
-            if (match.winner) return; // Spiel bereits gewertet
+            if (match.winner) return;
 
             match.winner = winner;
             const loser = match.teamA === winner ? match.teamB : match.teamA;
@@ -293,27 +266,35 @@
                 return;
             }
             const data = getTournamentData();
-            if (data.ko_stage) { // Falls schon initialisiert
+            if (data.ko_stage) {
                 updateUI('ko-phase');
                 return;
             }
 
-            const qualifiers = [];
+            const qualifiersByGroup = [];
             data.groups.forEach(group => {
                 const sortedTeams = Object.entries(group.standings)
-                    .sort(([, a], [, b]) => b.points - a.points) // Sortiere nach Punkten
-                    .slice(0, 2) // Nimm die besten 2
+                    .sort(([, a], [, b]) => b.points - a.points || b.wins - a.wins) // Sortiere nach Punkten, dann nach Siegen
+                    .slice(0, 2)
                     .map(([teamName]) => teamName);
-                qualifiers.push({group: group.name, winner: sortedTeams[0], runnerUp: sortedTeams[1]});
+                qualifiersByGroup.push({group: group.name, winner: sortedTeams[0], runnerUp: sortedTeams[1]});
             });
 
-            // Erstelle Viertelfinal-Paarungen (z.B. A1 vs B2, B1 vs A2, etc.)
+            // Für ein Viertelfinale werden genau 4 Gruppen (8 qualifizierte Teams) benötigt.
+            if (qualifiersByGroup.length !== 4) {
+                alert(`Ein Viertelfinale kann nicht erstellt werden. Es gibt ${qualifiersByGroup.length} Gruppen, aber es werden genau 4 benötigt. Bitte starten Sie das Turnier mit 13-16 Teams.`);
+                return;
+            }
+            
+            const q = qualifiersByGroup; // Abkürzung
+            
+            // NEU: Ausgewogenerer Spielplan für das Viertelfinale
             data.ko_stage = {
                 quarterFinals: [
-                    { id: 'QF1', teamA: qualifiers[0].winner, teamB: qualifiers[1].runnerUp, winner: null },
-                    { id: 'QF2', teamA: qualifiers[2].winner, teamB: qualifiers[3].runnerUp, winner: null },
-                    { id: 'QF3', teamA: qualifiers[1].winner, teamB: qualifiers[0].runnerUp, winner: null },
-                    { id: 'QF4', teamA: qualifiers[3].winner, teamB: qualifiers[2].runnerUp, winner: null },
+                    { id: 'QF1', teamA: q[0].winner, teamB: q[3].runnerUp, winner: null }, // A1 vs D2
+                    { id: 'QF2', teamA: q[1].winner, teamB: q[2].runnerUp, winner: null }, // B1 vs C2
+                    { id: 'QF3', teamA: q[2].winner, teamB: q[1].runnerUp, winner: null }, // C1 vs B2
+                    { id: 'QF4', teamA: q[3].winner, teamB: q[0].runnerUp, winner: null }, // D1 vs A2
                 ],
                 semiFinals: [
                     { id: 'SF1', teamA: 'Sieger QF1', teamB: 'Sieger QF2', winner: null },
@@ -331,19 +312,16 @@
             const data = getTournamentData();
             const ko = data.ko_stage;
 
-            let match;
-            let loser;
+            let match, loser;
 
             if (stage === 'quarterFinals') {
                 match = ko.quarterFinals.find(m => m.id === matchId);
                 match.winner = winner;
-                loser = match.teamA === winner ? match.teamB : match.teamA;
                 // Halbfinale füllen
                 if(matchId === 'QF1') ko.semiFinals[0].teamA = winner;
                 if(matchId === 'QF2') ko.semiFinals[0].teamB = winner;
                 if(matchId === 'QF3') ko.semiFinals[1].teamA = winner;
                 if(matchId === 'QF4') ko.semiFinals[1].teamB = winner;
-
             } else if (stage === 'semiFinals') {
                 match = ko.semiFinals.find(m => m.id === matchId);
                 match.winner = winner;
@@ -374,10 +352,6 @@
             }
         };
 
-
-        // ##################################################################
-        // RENDERING & UI-UPDATES
-        // ##################################################################
         const updateUI = (stage) => {
             teamSetupSection.classList.add('hidden');
             groupPhaseSection.classList.add('hidden');
@@ -393,10 +367,10 @@
                 advanceToKoBtn.classList.remove('hidden');
                 renderGroups();
             } else if (stage === 'ko-phase') {
-                groupPhaseSection.classList.remove('hidden'); // Gruppen sichtbar lassen
+                groupPhaseSection.classList.remove('hidden');
                 koPhaseSection.classList.remove('hidden');
-                advanceToKoBtn.classList.add('hidden'); // Button nach Wechsel ausblenden
-                renderGroups(); // Gruppen erneut rendern (ohne Buttons)
+                advanceToKoBtn.classList.add('hidden');
+                renderGroups();
                 renderKoStage();
             }
         };
@@ -406,15 +380,13 @@
             if (!data || !data.groups) return;
             
             groupsContainer.innerHTML = '';
-
             data.groups.forEach(group => {
                 const groupDiv = document.createElement('div');
                 groupDiv.className = 'group-container';
                 groupDiv.innerHTML = `<h3>Gruppe ${group.name}</h3>`;
                 
-                // Standings Table
                 const standings = Object.entries(group.standings)
-                    .sort(([,a], [,b]) => b.points - a.points); // Sortieren
+                    .sort(([,a], [,b]) => b.points - a.points || b.wins - a.wins);
 
                 let tableHtml = `<table><thead><tr><th>Team</th><th>Sp</th><th>S</th><th>Pkt</th></tr></thead><tbody>`;
                 standings.forEach(([team, stats]) => {
@@ -423,22 +395,18 @@
                 tableHtml += `</tbody></table>`;
                 groupDiv.innerHTML += tableHtml;
 
-                // Matches List
-                if (!data.ko_stage) { // Match-Buttons nur in der Gruppenphase anzeigen
+                if (!data.ko_stage) {
                     const matchListDiv = document.createElement('div');
                     matchListDiv.className = 'match-list';
                     group.matches.forEach((match, index) => {
                         const matchDiv = document.createElement('div');
                         matchDiv.className = 'match';
-                        let buttonsHtml = '';
-                        if (match.winner) {
-                            buttonsHtml = `<span class="winner">Sieger: ${match.winner}</span>`;
-                        } else {
-                            buttonsHtml = `<div class="match-winner-btns">
+                        let buttonsHtml = (match.winner) 
+                            ? `<span class="winner">Sieger: ${match.winner}</span>`
+                            : `<div class="match-winner-btns">
                                 <button onclick="recordGroupWin('${group.name}', ${index}, '${match.teamA}')">${match.teamA}</button>
                                 <button onclick="recordGroupWin('${group.name}', ${index}, '${match.teamB}')">${match.teamB}</button>
                             </div>`;
-                        }
                         matchDiv.innerHTML = `<span class="match-teams">${match.teamA} vs ${match.teamB}</span> ${buttonsHtml}`;
                         matchListDiv.appendChild(matchDiv);
                     });
@@ -446,7 +414,6 @@
                 }
                 groupsContainer.appendChild(groupDiv);
             });
-            // Advance-Button enablen/disablen
             advanceToKoBtn.disabled = !areAllGroupMatchesPlayed();
         };
         
@@ -455,12 +422,14 @@
             if (!data || !data.ko_stage) return;
             
             const ko = data.ko_stage;
-
             const createMatchHtml = (match, stage) => {
                 let buttonsHtml = '';
+                const teamsAreSet = !match.teamA.includes('Sieger') && !match.teamA.includes('Verlierer') &&
+                                  !match.teamB.includes('Sieger') && !match.teamB.includes('Verlierer');
+
                 if (match.winner) {
                     buttonsHtml = `<span class="winner">Sieger: ${match.winner}</span>`;
-                } else if (!match.teamA.startsWith('Sieger') && !match.teamA.startsWith('Verlierer')) {
+                } else if (teamsAreSet) {
                     buttonsHtml = `<div class="match-winner-btns">
                         <button onclick="recordKoWin('${stage}', '${match.id}', '${match.teamA}')">${match.teamA}</button>
                         <button onclick="recordKoWin('${stage}', '${match.id}', '${match.teamB}')">${match.teamB}</button>
@@ -478,27 +447,18 @@
             finalContainer.innerHTML = '<h4>Finale</h4>' + createMatchHtml(ko.final, 'final');
         };
 
-        // ##################################################################
-        // INITIALISIERUNG
-        // ##################################################################
         const initializePage = () => {
-            window.recordGroupWin = recordGroupWin; // Mache Funktionen global verfügbar für onclick
+            window.recordGroupWin = recordGroupWin;
             window.recordKoWin = recordKoWin;
-
             const tournamentData = getTournamentData();
             if (tournamentData) {
-                if (tournamentData.ko_stage) {
-                    updateUI('ko-phase');
-                } else {
-                    updateUI('group-phase');
-                }
+                updateUI(tournamentData.ko_stage ? 'ko-phase' : 'group-phase');
             } else {
                 renderTeamList();
                 updateUI('setup');
             }
         };
 
-        // Event Listeners
         addTeamBtn.addEventListener('click', addTeam);
         teamNameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTeam(); });
         startTournamentBtn.addEventListener('click', startTournament);
