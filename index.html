@@ -1,119 +1,13 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Seilzieh Turnier</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <style>
-    body {
-      font-family: sans-serif;
-      max-width: 1200px;
-      margin: auto;
-      padding: 1em;
-      background: url('background.png');
-      background-size: cover;
-      background-attachment: fixed;
-      background-repeat: no-repeat;
-      background-position: center;
-      color: #fff;
-      text-shadow: 1px 1px 2px #000;
-    }
-    h2 { margin-top: 2em; }
-    .group, .match { margin: 1em 0; }
-    button { margin-top: 1em; }
-    select { margin-left: 1em; }
-    .hidden { display: none; }
-    table { width: 100%; border-collapse: collapse; margin-top: 1em; }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 0.5em;
-      text-align: center;
-      background-color: rgba(255, 255, 255, 0.8);
-      color: #000;
-    }
-    #team-list {
-      margin-top: 1em;
-      padding: 0.5em;
-      background: rgba(255,255,255,0.8);
-      color: #000;
-      border-radius: 5px;
-    }
-    #team-list ul { list-style: none; padding: 0; }
-    #team-list li {
-      margin: 0.3em 0;
-      display: flex;
-      justify-content: space-between;
-    }
-    #team-list button {
-      background-color: red;
-      color: white;
-      border: none;
-      padding: 0.2em 0.5em;
-      cursor: pointer;
-    }
-    .bracket {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 2em;
-    }
-    .round {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1em;
-      flex: 1;
-      position: relative;
-    }
-    .match-box {
-      background: rgba(255,255,255,0.9);
-      color: black;
-      padding: 1em;
-      border-radius: 5px;
-      min-width: 150px;
-      text-align: center;
-      position: relative;
-    }
-    .connector {
-      position: absolute;
-      height: 2px;
-      background: black;
-      left: 100%;
-      top: 50%;
-      width: 20px;
-    }
-  </style>
+  <!-- HEAD BLEIBT UNVERÄNDERT -->
 </head>
 <body>
-  <h1>Seilzieh Turnier</h1>
+  <!-- VORHANDENER BODY BLEIBT BIS ZUM SCRIPT-BLOCK GLEICH -->
 
-  <div id="team-input">
-    <h2>1. Teams eingeben (2–40)</h2>
-    <input type="text" id="team-name" placeholder="Teamname eingeben" onkeydown="if(event.key==='Enter') addTeam()" />
-    <button onclick="addTeam()">Hinzufügen</button>
-    <button onclick="startTournament()">Turnier starten</button>
-    <button onclick="resetTournament()">Neu starten</button>
-    <div id="team-list"></div>
-  </div>
-
-  <div id="group-phase" class="hidden">
-    <h2>2. Gruppenphase</h2>
-    <button onclick="downloadGroupSchedule()">📄 Spielplan herunterladen (PDF)</button>
-    <div id="groups"></div>
-  </div>
-
-  <div id="ko-phase" class="hidden">
-    <h2>3. KO-Phase</h2>
-    <div id="ko-rounds"></div>
-    <div class="bracket" id="bracket"></div>
-  </div>
-
-  <div id="winner" class="hidden">
-    <h2>🏆 Sieger des Turniers</h2>
-    <p id="final-winner"></p>
-  </div>
-
-<script>
+  <script>
     const { jsPDF } = window.jspdf;
     let teams = JSON.parse(localStorage.getItem("teams")) || [];
     let groupResults = JSON.parse(sessionStorage.getItem("groupResults")) || {};
@@ -223,8 +117,5 @@
       }
     }
   </script>
-</body>
-</html>
-
 </body>
 </html>
