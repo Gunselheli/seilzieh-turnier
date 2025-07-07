@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seilzieh Turnier Webseite - Pro</title>
+    <title>Seilzieh Turnier Webseite - Final</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -15,12 +15,12 @@
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-            background-color: #f4f4f9; /* Fallback-Farbe */
+            background-color: #f4f4f9;
         }
         main {
-            max-width: 1000px;
+            max-width: 1100px;
             margin: auto;
-            background: rgba(255, 255, 255, 0.92); /* Leicht transparenter Hauptcontainer */
+            background: rgba(255, 255, 255, 0.92);
             padding: 20px 30px;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
@@ -46,34 +46,43 @@
         
         /* Turnier-Steuerung */
         #tournament-controls { margin-top: 30px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 15px; }
-        #startTournamentBtn { background-color: #3498db; color: white; }
+        #startTournamentBtn, #resetTournamentBtn, #advanceToKoBtn { color: white; }
+        #startTournamentBtn { background-color: #3498db; }
         #startTournamentBtn:hover { background-color: #2980b9; }
-        #resetTournamentBtn { background-color: #f39c12; color: white; }
+        #resetTournamentBtn { background-color: #f39c12; }
         #resetTournamentBtn:hover { background-color: #e67e22; }
-        #advanceToKoBtn { background-color: #8e44ad; color: white; }
+        #advanceToKoBtn { background-color: #8e44ad; }
         #advanceToKoBtn:hover { background-color: #9b59b6; }
         #advanceToKoBtn:disabled { background-color: #bdc3c7; cursor: not-allowed; }
 
-        /* Gruppen & KO-Phase Layout */
-        #groupsContainer, #ko-phase > div { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px; }
-        .group-container, .ko-round { border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: rgba(249, 249, 249, 0.85); /* NEU: Transparenter Hintergrund */ }
-        .group-container h3, .ko-round h4 { margin-top: 0; border-color: #95a5a6; }
-        
-        /* Tabellen-Styling */
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: rgba(236, 240, 241, 0.7); /* NEU: Transparenter Header */ }
-        td { background-color: rgba(255, 255, 255, 0.5); /* NEU: Transparente Zellen */ }
+        /* Layouts */
+        .content-layout { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; margin-top: 20px; }
+        @media (max-width: 900px) { .content-layout { grid-template-columns: 1fr; } }
 
-        /* Match-Styling */
+        /* NEU: Spielplan-Container */
+        #schedule-container { border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: rgba(249, 249, 249, 0.85); }
+        #schedule-list { list-style: none; padding: 0; margin: 0; }
+        #schedule-list li { padding: 8px; border-bottom: 1px solid #e0e0e0; background-color: rgba(255, 255, 255, 0.6); }
+        #schedule-list li:last-child { border-bottom: none; }
+        #schedule-list .played { text-decoration: line-through; color: #7f8c8d; }
+
+        /* Gruppen & KO-Phase */
+        #main-content-area {}
+        #groupsContainer, #ko-phase > div { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; }
+        .group-container, .ko-round { border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: rgba(249, 249, 249, 0.85); }
+        .group-container h3, .ko-round h4 { margin-top: 0; border-color: #95a5a6; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th { background-color: rgba(236, 240, 241, 0.7); }
+        td { background-color: rgba(255, 255, 255, 0.5); }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        
         .match-list { margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ccc; }
-        .match { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-radius: 4px; margin-bottom: 5px; background: rgba(233, 233, 233, 0.8); /* NEU: Transparente Matches */ }
+        .match { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-radius: 4px; margin-bottom: 5px; background: rgba(233, 233, 233, 0.8); }
         .match-teams { font-weight: bold; }
         .match-winner-btns button { font-size: 12px; padding: 5px 8px; margin-left: 5px; background-color: #3498db; color: white; }
         .match-winner-btns button:disabled { background-color: #7f8c8d; cursor: not-allowed; }
         .match .winner { font-weight: bold; color: #27ae60; }
 
-        /* KO-Runden Styling */
         #final-container .match { border: 2px solid #f1c40f; }
         #final-container h4 { color: #f1c40f; border-color: #f1c40f; }
     </style>
@@ -83,7 +92,6 @@
     <main>
         <h1>Seilzieh Turnier Webseite</h1>
 
-        <!-- SEKTION 1: TEAMVERWALTUNG -->
         <section id="team-setup">
             <h2>1. Teamverwaltung</h2>
             <div class="input-group">
@@ -93,380 +101,423 @@
             <ul id="teamList"></ul>
         </section>
 
-        <!-- SEKTION 2: TURNIER-STEUERUNG -->
         <section id="tournament-controls">
             <div>
                 <h2>2. Turnier starten</h2>
                 <button id="startTournamentBtn">Turnier starten</button>
             </div>
-            <div>
-                <button id="advanceToKoBtn" class="hidden">Zur KO-Phase</button>
-            </div>
+            <div><button id="advanceToKoBtn" class="hidden">Zur KO-Phase</button></div>
             <div>
                 <h2>Turnier zurücksetzen</h2>
                 <button id="resetTournamentBtn">Turnier neustarten</button>
             </div>
         </section>
 
-        <!-- SEKTION 3: GRUPPENPHASE -->
-        <section id="group-phase" class="hidden">
-            <h2>3. Gruppenphase</h2>
-            <div id="groupsContainer"></div>
-        </section>
+        <!-- Layout Container für Spielplan und Phasen -->
+        <div id="tournament-layout" class="content-layout hidden">
+            <!-- NEU: Zentraler Spielplan -->
+            <aside id="schedule-container">
+                <h2>Gesamt-Spielplan</h2>
+                <ol id="schedule-list"></ol>
+            </aside>
 
-        <!-- SEKTION 4: KO-PHASE -->
-        <section id="ko-phase" class="hidden">
-            <h2>4. KO-Phase</h2>
-            <div id="quarter-finals-container" class="ko-round"><h4>Viertelfinale</h4></div>
-            <div id="semi-finals-container" class="ko-round"><h4>Halbfinale</h4></div>
-            <div id="third-place-container" class="ko-round"><h4>Spiel um Platz 3</h4></div>
-            <div id="final-container" class="ko-round"><h4>Finale</h4></div>
-        </section>
+            <!-- Gruppen- und KO-Phase -->
+            <div id="main-content-area">
+                <section id="group-phase">
+                    <h2>3. Gruppenphase</h2>
+                    <div id="groupsContainer"></div>
+                </section>
+                <section id="ko-phase" class="hidden">
+                    <h2>4. KO-Phase</h2>
+                    <div id="quarter-finals-container" class="ko-round"></div>
+                    <div id="semi-finals-container" class="ko-round"></div>
+                    <div id="third-place-container" class="ko-round"></div>
+                    <div id="final-container" class="ko-round"></div>
+                </section>
+            </div>
+        </div>
     </main>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', () => {
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // #region Konstanten und DOM-Elemente
+    const MAX_TEAMS_PER_GROUP = 4;
+    const POINTS_PER_WIN = 2;
+    const STORAGE_KEYS = { TEAMS: 'tournament_teams_v2', DATA: 'tournament_data_v2' };
 
-        const MAX_TEAMS = 40;
-        const MAX_TEAMS_PER_GROUP = 4;
-        const POINTS_PER_WIN = 2;
-        const STORAGE_KEYS = {
-            TEAMS: 'tournament_teams',
-            DATA: 'tournament_data'
-        };
+    const teamNameInput = document.getElementById('teamNameInput');
+    const addTeamBtn = document.getElementById('addTeamBtn');
+    const teamList = document.getElementById('teamList');
+    const startTournamentBtn = document.getElementById('startTournamentBtn');
+    const resetTournamentBtn = document.getElementById('resetTournamentBtn');
+    const advanceToKoBtn = document.getElementById('advanceToKoBtn');
+    
+    const teamSetupSection = document.getElementById('team-setup');
+    const tournamentLayout = document.getElementById('tournament-layout');
+    const scheduleList = document.getElementById('schedule-list');
+    const groupPhaseSection = document.getElementById('group-phase');
+    const koPhaseSection = document.getElementById('ko-phase');
+    const groupsContainer = document.getElementById('groupsContainer');
 
-        const teamNameInput = document.getElementById('teamNameInput');
-        const addTeamBtn = document.getElementById('addTeamBtn');
-        const teamList = document.getElementById('teamList');
-        const startTournamentBtn = document.getElementById('startTournamentBtn');
-        const resetTournamentBtn = document.getElementById('resetTournamentBtn');
-        const advanceToKoBtn = document.getElementById('advanceToKoBtn');
-        const teamSetupSection = document.getElementById('team-setup');
-        const groupPhaseSection = document.getElementById('group-phase');
-        const koPhaseSection = document.getElementById('ko-phase');
-        const groupsContainer = document.getElementById('groupsContainer');
-        const qfContainer = document.getElementById('quarter-finals-container');
-        const sfContainer = document.getElementById('semi-finals-container');
-        const thirdPlaceContainer = document.getElementById('third-place-container');
-        const finalContainer = document.getElementById('final-container');
+    const qfContainer = document.getElementById('quarter-finals-container');
+    const sfContainer = document.getElementById('semi-finals-container');
+    const thirdPlaceContainer = document.getElementById('third-place-container');
+    const finalContainer = document.getElementById('final-container');
+    // #endregion
 
-        const getTeamsFromStorage = () => JSON.parse(localStorage.getItem(STORAGE_KEYS.TEAMS)) || [];
-        const saveTeamsToStorage = (teams) => localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify(teams));
-        const getTournamentData = () => JSON.parse(sessionStorage.getItem(STORAGE_KEYS.DATA)) || null;
-        const saveTournamentData = (data) => sessionStorage.setItem(STORAGE_KEYS.DATA, JSON.stringify(data));
+    // #region Speicherfunktionen
+    const getTeamsFromStorage = () => JSON.parse(localStorage.getItem(STORAGE_KEYS.TEAMS)) || [];
+    const saveTeamsToStorage = (teams) => localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify(teams));
+    const getTournamentData = () => JSON.parse(sessionStorage.getItem(STORAGE_KEYS.DATA)) || null;
+    const saveTournamentData = (data) => sessionStorage.setItem(STORAGE_KEYS.DATA, JSON.stringify(data));
+    // #endregion
 
-        const renderTeamList = () => {
-            const teams = getTeamsFromStorage();
-            teamList.innerHTML = '';
-            teams.forEach(team => {
-                const li = document.createElement('li');
-                li.textContent = team;
-                const deleteBtn = document.createElement('button');
-                deleteBtn.textContent = 'x';
-                deleteBtn.className = 'delete-btn';
-                deleteBtn.onclick = () => removeTeam(team);
-                li.appendChild(deleteBtn);
-                teamList.appendChild(li);
-            });
-        };
+    // #region Teamverwaltung
+    const renderTeamList = () => {
+        const teams = getTeamsFromStorage();
+        teamList.innerHTML = '';
+        teams.forEach(team => {
+            const li = document.createElement('li');
+            li.textContent = team;
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'x';
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.onclick = () => removeTeam(team);
+            li.appendChild(deleteBtn);
+            teamList.appendChild(li);
+        });
+    };
 
-        const addTeam = () => {
-            const teamName = teamNameInput.value.trim();
-            if (!teamName) { alert("Bitte gib einen Teamnamen ein."); return; }
-            const teams = getTeamsFromStorage();
-            if (teams.length >= MAX_TEAMS) { alert(`Maximal ${MAX_TEAMS} Teams.`); return; }
-            if (teams.includes(teamName)) { alert("Dieses Team existiert bereits."); return; }
-            teams.push(teamName);
-            saveTeamsToStorage(teams);
-            renderTeamList();
-            teamNameInput.value = '';
-            teamNameInput.focus();
-        };
+    const addTeam = () => {
+        const teamName = teamNameInput.value.trim();
+        if (!teamName) { alert("Bitte gib einen Teamnamen ein."); return; }
+        const teams = getTeamsFromStorage();
+        if (teams.includes(teamName)) { alert("Dieses Team existiert bereits."); return; }
+        teams.push(teamName);
+        saveTeamsToStorage(teams);
+        renderTeamList();
+        teamNameInput.value = '';
+        teamNameInput.focus();
+    };
 
-        const removeTeam = (teamNameToRemove) => {
-            let teams = getTeamsFromStorage();
-            teams = teams.filter(team => team !== teamNameToRemove);
-            saveTeamsToStorage(teams);
-            renderTeamList();
-        };
+    const removeTeam = (teamNameToRemove) => {
+        let teams = getTeamsFromStorage().filter(team => team !== teamNameToRemove);
+        saveTeamsToStorage(teams);
+        renderTeamList();
+    };
+    // #endregion
 
-        const shuffleArray = (array) => {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        };
+    // #region Turnier-Logik
+    const shuffleArray = (array) => {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    };
 
-        const generateGroupMatches = (teams) => {
-            const matches = [];
-            for (let i = 0; i < teams.length; i++) {
-                for (let j = i + 1; j < teams.length; j++) {
-                    matches.push({ teamA: teams[i], teamB: teams[j], winner: null });
+    /**
+     * NEU: Generiert einen fairen Round-Robin-Spielplan.
+     * Verhindert, dass Teams direkt hintereinander spielen müssen.
+     * @param {string[]} teams - Array von Teamnamen.
+     * @returns {object[]} Geordnete Liste von Match-Objekten.
+     */
+    const generateBalancedGroupSchedule = (teams) => {
+        const schedule = [];
+        let localTeams = [...teams];
+
+        // Füge ein "BYE"-Team hinzu, wenn die Anzahl ungerade ist, um den Algorithmus zu vereinfachen
+        if (localTeams.length % 2 !== 0) {
+            localTeams.push("BYE");
+        }
+
+        const numRounds = localTeams.length - 1;
+        const numTeams = localTeams.length;
+
+        for (let r = 0; r < numRounds; r++) {
+            for (let i = 0; i < numTeams / 2; i++) {
+                const teamA = localTeams[i];
+                const teamB = localTeams[numTeams - 1 - i];
+                
+                // Füge das Spiel nur hinzu, wenn kein Team ein "BYE" ist
+                if (teamA !== "BYE" && teamB !== "BYE") {
+                    schedule.push({ teamA, teamB, winner: null });
                 }
             }
-            return matches;
-        };
+            // Rotiere die Teams für die nächste Runde (außer das erste Team)
+            localTeams.splice(1, 0, localTeams.pop());
+        }
+        return schedule;
+    };
 
-        const startTournament = () => {
-            const teams = getTeamsFromStorage();
-            if (teams.length < 8) {
-                alert("Es werden mindestens 8 Teams für die Gruppen- und KO-Phase benötigt. Ideal sind 13-16 Teams für ein Viertelfinale.");
-                return;
-            }
+    const startTournament = () => {
+        const teams = getTeamsFromStorage();
+        if (teams.length < 4) {
+            alert("Es werden mindestens 4 Teams für ein Turnier benötigt.");
+            return;
+        }
 
-            const shuffledTeams = shuffleArray([...teams]);
-            const groups = [];
-            let groupIndex = 0;
-            for (let i = 0; i < shuffledTeams.length; i += MAX_TEAMS_PER_GROUP) {
-                const groupTeams = shuffledTeams.slice(i, i + MAX_TEAMS_PER_GROUP);
-                const standings = {};
-                groupTeams.forEach(team => {
-                    standings[team] = { played: 0, wins: 0, points: 0 };
-                });
-                groups.push({
-                    name: String.fromCharCode(65 + groupIndex++),
-                    teams: groupTeams,
-                    matches: generateGroupMatches(groupTeams),
-                    standings: standings,
-                });
-            }
-            
-            saveTournamentData({ groups: groups, ko_stage: null });
-            updateUI('group-phase');
+        const shuffledTeams = shuffleArray([...teams]);
+        const groups = [];
+        let groupIndex = 0;
+        for (let i = 0; i < shuffledTeams.length; i += MAX_TEAMS_PER_GROUP) {
+            const groupTeams = shuffledTeams.slice(i, i + MAX_TEAMS_PER_GROUP);
+            const standings = {};
+            groupTeams.forEach(team => {
+                standings[team] = { played: 0, wins: 0, points: 0 };
+            });
+            groups.push({
+                name: String.fromCharCode(65 + groupIndex++),
+                teams: groupTeams,
+                matches: generateBalancedGroupSchedule(groupTeams), // NEU: Balancierten Plan verwenden
+                standings: standings,
+            });
+        }
+        
+        saveTournamentData({ groups: groups, ko_stage: null });
+        updateUI('group-phase');
+    };
+    
+    const recordGroupWin = (groupName, matchIndex, winner) => {
+        const data = getTournamentData();
+        const group = data.groups.find(g => g.name === groupName);
+        const match = group.matches[matchIndex];
+
+        if (match.winner) return;
+
+        match.winner = winner;
+        const loser = match.teamA === winner ? match.teamB : match.teamA;
+
+        group.standings[winner].wins++;
+        group.standings[winner].points += POINTS_PER_WIN;
+        group.standings[winner].played++;
+        group.standings[loser].played++;
+
+        saveTournamentData(data);
+        renderAll();
+    };
+    
+    const areAllGroupMatchesPlayed = () => {
+        const data = getTournamentData();
+        return data.groups.every(g => g.matches.every(m => m.winner !== null));
+    };
+    
+    const advanceToKoStage = () => {
+        if (!areAllGroupMatchesPlayed()) {
+            alert("Es müssen erst alle Gruppenspiele beendet werden!");
+            return;
+        }
+        const data = getTournamentData();
+        if (data.ko_stage) { updateUI('ko-phase'); return; }
+
+        const qualifiersByGroup = [];
+        data.groups.forEach(group => {
+            const sortedTeams = Object.entries(group.standings)
+                .sort(([, a], [, b]) => b.points - a.points || b.wins - a.wins)
+                .slice(0, 2)
+                .map(([teamName]) => teamName);
+            qualifiersByGroup.push({group: group.name, winner: sortedTeams[0], runnerUp: sortedTeams[1]});
+        });
+
+        if (qualifiersByGroup.length < 4) {
+            alert(`Ein Viertelfinale benötigt mindestens 8 qualifizierte Teams aus 4 Gruppen. Aktuell sind es nur ${qualifiersByGroup.length} Gruppen. Bitte starte mit 13-16 Teams für ein volles Viertelfinale.`);
+            return;
+        }
+        
+        const q = qualifiersByGroup;
+        data.ko_stage = {
+            quarterFinals: [
+                { id: 'QF1', teamA: q[0].winner, teamB: q[3].runnerUp, winner: null }, // A1 vs D2
+                { id: 'QF2', teamA: q[1].winner, teamB: q[2].runnerUp, winner: null }, // B1 vs C2
+                { id: 'QF3', teamA: q[2].winner, teamB: q[1].runnerUp, winner: null }, // C1 vs B2
+                { id: 'QF4', teamA: q[3].winner, teamB: q[0].runnerUp, winner: null }, // D1 vs A2
+            ],
+            semiFinals: [
+                { id: 'SF1', teamA: 'Sieger QF1', teamB: 'Sieger QF2', winner: null },
+                { id: 'SF2', teamA: 'Sieger QF3', teamB: 'Sieger QF4', winner: null },
+            ],
+            thirdPlace: { id: '3P', teamA: 'Verlierer SF1', teamB: 'Verlierer SF2', winner: null },
+            final: { id: 'F', teamA: 'Sieger SF1', teamB: 'Sieger SF2', winner: null },
         };
         
-        const recordGroupWin = (groupName, matchIndex, winner) => {
-            const data = getTournamentData();
-            const group = data.groups.find(g => g.name === groupName);
-            const match = group.matches[matchIndex];
+        saveTournamentData(data);
+        updateUI('ko-phase');
+    };
 
-            if (match.winner) return;
+    const recordKoWin = (stage, matchId, winner) => {
+        const data = getTournamentData();
+        const ko = data.ko_stage;
+        let match;
 
+        if (stage === 'quarterFinals') {
+            match = ko.quarterFinals.find(m => m.id === matchId);
+            match.winner = winner;
+            if(matchId === 'QF1') ko.semiFinals[0].teamA = winner;
+            if(matchId === 'QF2') ko.semiFinals[0].teamB = winner;
+            if(matchId === 'QF3') ko.semiFinals[1].teamA = winner;
+            if(matchId === 'QF4') ko.semiFinals[1].teamB = winner;
+        } else if (stage === 'semiFinals') {
+            match = ko.semiFinals.find(m => m.id === matchId);
             match.winner = winner;
             const loser = match.teamA === winner ? match.teamB : match.teamA;
-
-            group.standings[winner].wins += 1;
-            group.standings[winner].points += POINTS_PER_WIN;
-            group.standings[winner].played += 1;
-            group.standings[loser].played += 1;
-
-            saveTournamentData(data);
-            renderGroups();
-        };
-        
-        const areAllGroupMatchesPlayed = () => {
-            const data = getTournamentData();
-            return data.groups.every(g => g.matches.every(m => m.winner !== null));
-        };
-        
-        const advanceToKoStage = () => {
-            if (!areAllGroupMatchesPlayed()) {
-                alert("Es müssen erst alle Gruppenspiele beendet werden!");
-                return;
+            if(matchId === 'SF1') {
+                ko.final.teamA = winner;
+                ko.thirdPlace.teamA = loser;
+            } else { // SF2
+                ko.final.teamB = winner;
+                ko.thirdPlace.teamB = loser;
             }
-            const data = getTournamentData();
-            if (data.ko_stage) {
-                updateUI('ko-phase');
-                return;
-            }
+        } else if (stage === 'thirdPlace') ko.thirdPlace.winner = winner;
+        else if (stage === 'final') ko.final.winner = winner;
 
-            const qualifiersByGroup = [];
-            data.groups.forEach(group => {
-                const sortedTeams = Object.entries(group.standings)
-                    .sort(([, a], [, b]) => b.points - a.points || b.wins - a.wins) // Sortiere nach Punkten, dann nach Siegen
-                    .slice(0, 2)
-                    .map(([teamName]) => teamName);
-                qualifiersByGroup.push({group: group.name, winner: sortedTeams[0], runnerUp: sortedTeams[1]});
-            });
+        saveTournamentData(data);
+        renderKoStage();
+    };
 
-            // Für ein Viertelfinale werden genau 4 Gruppen (8 qualifizierte Teams) benötigt.
-            if (qualifiersByGroup.length !== 4) {
-                alert(`Ein Viertelfinale kann nicht erstellt werden. Es gibt ${qualifiersByGroup.length} Gruppen, aber es werden genau 4 benötigt. Bitte starten Sie das Turnier mit 13-16 Teams.`);
-                return;
-            }
-            
-            const q = qualifiersByGroup; // Abkürzung
-            
-            // NEU: Ausgewogenerer Spielplan für das Viertelfinale
-            data.ko_stage = {
-                quarterFinals: [
-                    { id: 'QF1', teamA: q[0].winner, teamB: q[3].runnerUp, winner: null }, // A1 vs D2
-                    { id: 'QF2', teamA: q[1].winner, teamB: q[2].runnerUp, winner: null }, // B1 vs C2
-                    { id: 'QF3', teamA: q[2].winner, teamB: q[1].runnerUp, winner: null }, // C1 vs B2
-                    { id: 'QF4', teamA: q[3].winner, teamB: q[0].runnerUp, winner: null }, // D1 vs A2
-                ],
-                semiFinals: [
-                    { id: 'SF1', teamA: 'Sieger QF1', teamB: 'Sieger QF2', winner: null },
-                    { id: 'SF2', teamA: 'Sieger QF3', teamB: 'Sieger QF4', winner: null },
-                ],
-                thirdPlace: { id: '3P', teamA: 'Verlierer SF1', teamB: 'Verlierer SF2', winner: null },
-                final: { id: 'F', teamA: 'Sieger SF1', teamB: 'Sieger SF2', winner: null },
-            };
-            
-            saveTournamentData(data);
-            updateUI('ko-phase');
-        };
+    const resetTournament = () => {
+        if (confirm("Möchtest du das Turnier wirklich zurücksetzen? Alle Daten werden gelöscht.")) {
+            localStorage.removeItem(STORAGE_KEYS.TEAMS);
+            sessionStorage.removeItem(STORAGE_KEYS.DATA);
+            location.reload(true);
+        }
+    };
+    // #endregion
 
-        const recordKoWin = (stage, matchId, winner) => {
-            const data = getTournamentData();
-            const ko = data.ko_stage;
+    // #region Rendering
+    const updateUI = (stage) => {
+        teamSetupSection.classList.add('hidden');
+        tournamentLayout.classList.add('hidden');
+        koPhaseSection.classList.add('hidden');
+        advanceToKoBtn.classList.add('hidden');
+        startTournamentBtn.classList.add('hidden');
 
-            let match, loser;
-
-            if (stage === 'quarterFinals') {
-                match = ko.quarterFinals.find(m => m.id === matchId);
-                match.winner = winner;
-                // Halbfinale füllen
-                if(matchId === 'QF1') ko.semiFinals[0].teamA = winner;
-                if(matchId === 'QF2') ko.semiFinals[0].teamB = winner;
-                if(matchId === 'QF3') ko.semiFinals[1].teamA = winner;
-                if(matchId === 'QF4') ko.semiFinals[1].teamB = winner;
-            } else if (stage === 'semiFinals') {
-                match = ko.semiFinals.find(m => m.id === matchId);
-                match.winner = winner;
-                loser = match.teamA === winner ? match.teamB : match.teamA;
-                // Finale und Spiel um Platz 3 füllen
-                if(matchId === 'SF1') {
-                    ko.final.teamA = winner;
-                    ko.thirdPlace.teamA = loser;
-                } else { // SF2
-                    ko.final.teamB = winner;
-                    ko.thirdPlace.teamB = loser;
-                }
-            } else if (stage === 'thirdPlace') {
-                ko.thirdPlace.winner = winner;
-            } else if (stage === 'final') {
-                ko.final.winner = winner;
-            }
-
-            saveTournamentData(data);
-            renderKoStage();
-        };
-
-        const resetTournament = () => {
-            if (confirm("Möchtest du das Turnier wirklich zurücksetzen? Alle Teams und Ergebnisse werden gelöscht.")) {
-                localStorage.removeItem(STORAGE_KEYS.TEAMS);
-                sessionStorage.removeItem(STORAGE_KEYS.DATA);
-                location.reload(true);
-            }
-        };
-
-        const updateUI = (stage) => {
-            teamSetupSection.classList.add('hidden');
-            groupPhaseSection.classList.add('hidden');
-            koPhaseSection.classList.add('hidden');
+        if (stage === 'setup') {
+            teamSetupSection.classList.remove('hidden');
+            startTournamentBtn.classList.remove('hidden');
+        } else if (stage === 'group-phase') {
+            tournamentLayout.classList.remove('hidden');
+            advanceToKoBtn.classList.remove('hidden');
+            renderAll();
+        } else if (stage === 'ko-phase') {
+            tournamentLayout.classList.remove('hidden');
+            koPhaseSection.classList.remove('hidden');
             advanceToKoBtn.classList.add('hidden');
-            startTournamentBtn.classList.add('hidden');
+            renderAll();
+        }
+    };
+    
+    const renderAll = () => {
+        renderFullSchedule();
+        renderGroups();
+        if (getTournamentData()?.ko_stage) {
+            renderKoStage();
+        }
+    }
 
-            if (stage === 'setup') {
-                teamSetupSection.classList.remove('hidden');
-                startTournamentBtn.classList.remove('hidden');
-            } else if (stage === 'group-phase') {
-                groupPhaseSection.classList.remove('hidden');
-                advanceToKoBtn.classList.remove('hidden');
-                renderGroups();
-            } else if (stage === 'ko-phase') {
-                groupPhaseSection.classList.remove('hidden');
-                koPhaseSection.classList.remove('hidden');
-                advanceToKoBtn.classList.add('hidden');
-                renderGroups();
-                renderKoStage();
-            }
-        };
-
-        const renderGroups = () => {
-            const data = getTournamentData();
-            if (!data || !data.groups) return;
-            
-            groupsContainer.innerHTML = '';
-            data.groups.forEach(group => {
-                const groupDiv = document.createElement('div');
-                groupDiv.className = 'group-container';
-                groupDiv.innerHTML = `<h3>Gruppe ${group.name}</h3>`;
-                
-                const standings = Object.entries(group.standings)
-                    .sort(([,a], [,b]) => b.points - a.points || b.wins - a.wins);
-
-                let tableHtml = `<table><thead><tr><th>Team</th><th>Sp</th><th>S</th><th>Pkt</th></tr></thead><tbody>`;
-                standings.forEach(([team, stats]) => {
-                    tableHtml += `<tr><td>${team}</td><td>${stats.played}</td><td>${stats.wins}</td><td>${stats.points}</td></tr>`;
-                });
-                tableHtml += `</tbody></table>`;
-                groupDiv.innerHTML += tableHtml;
-
-                if (!data.ko_stage) {
-                    const matchListDiv = document.createElement('div');
-                    matchListDiv.className = 'match-list';
-                    group.matches.forEach((match, index) => {
-                        const matchDiv = document.createElement('div');
-                        matchDiv.className = 'match';
-                        let buttonsHtml = (match.winner) 
-                            ? `<span class="winner">Sieger: ${match.winner}</span>`
-                            : `<div class="match-winner-btns">
-                                <button onclick="recordGroupWin('${group.name}', ${index}, '${match.teamA}')">${match.teamA}</button>
-                                <button onclick="recordGroupWin('${group.name}', ${index}, '${match.teamB}')">${match.teamB}</button>
-                            </div>`;
-                        matchDiv.innerHTML = `<span class="match-teams">${match.teamA} vs ${match.teamB}</span> ${buttonsHtml}`;
-                        matchListDiv.appendChild(matchDiv);
-                    });
-                    groupDiv.appendChild(matchListDiv);
-                }
-                groupsContainer.appendChild(groupDiv);
-            });
-            advanceToKoBtn.disabled = !areAllGroupMatchesPlayed();
-        };
-        
-        const renderKoStage = () => {
-            const data = getTournamentData();
-            if (!data || !data.ko_stage) return;
-            
-            const ko = data.ko_stage;
-            const createMatchHtml = (match, stage) => {
-                let buttonsHtml = '';
-                const teamsAreSet = !match.teamA.includes('Sieger') && !match.teamA.includes('Verlierer') &&
-                                  !match.teamB.includes('Sieger') && !match.teamB.includes('Verlierer');
-
+    const renderFullSchedule = () => {
+        const data = getTournamentData();
+        if (!data) return;
+        scheduleList.innerHTML = '';
+        let matchCounter = 1;
+        data.groups.forEach(group => {
+            group.matches.forEach(match => {
+                const li = document.createElement('li');
+                li.innerHTML = `G. ${group.name}: ${match.teamA} vs ${match.teamB}`;
                 if (match.winner) {
-                    buttonsHtml = `<span class="winner">Sieger: ${match.winner}</span>`;
-                } else if (teamsAreSet) {
-                    buttonsHtml = `<div class="match-winner-btns">
-                        <button onclick="recordKoWin('${stage}', '${match.id}', '${match.teamA}')">${match.teamA}</button>
-                        <button onclick="recordKoWin('${stage}', '${match.id}', '${match.teamB}')">${match.teamB}</button>
-                    </div>`;
+                    li.classList.add('played');
                 }
-                return `<div class="match">
-                    <span class="match-teams">${match.teamA} vs ${match.teamB}</span>
-                    ${buttonsHtml}
-                </div>`;
-            };
+                scheduleList.appendChild(li);
+            });
+        });
+    };
 
-            qfContainer.innerHTML = '<h4>Viertelfinale</h4>' + ko.quarterFinals.map(m => createMatchHtml(m, 'quarterFinals')).join('');
-            sfContainer.innerHTML = '<h4>Halbfinale</h4>' + ko.semiFinals.map(m => createMatchHtml(m, 'semiFinals')).join('');
-            thirdPlaceContainer.innerHTML = '<h4>Spiel um Platz 3</h4>' + createMatchHtml(ko.thirdPlace, 'thirdPlace');
-            finalContainer.innerHTML = '<h4>Finale</h4>' + createMatchHtml(ko.final, 'final');
-        };
-
-        const initializePage = () => {
-            window.recordGroupWin = recordGroupWin;
-            window.recordKoWin = recordKoWin;
-            const tournamentData = getTournamentData();
-            if (tournamentData) {
-                updateUI(tournamentData.ko_stage ? 'ko-phase' : 'group-phase');
-            } else {
-                renderTeamList();
-                updateUI('setup');
-            }
-        };
-
-        addTeamBtn.addEventListener('click', addTeam);
-        teamNameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTeam(); });
-        startTournamentBtn.addEventListener('click', startTournament);
-        resetTournamentBtn.addEventListener('click', resetTournament);
-        advanceToKoBtn.addEventListener('click', advanceToKoStage);
+    const renderGroups = () => {
+        const data = getTournamentData();
+        if (!data || !data.groups) return;
         
-        initializePage();
-    });
-    </script>
+        groupsContainer.innerHTML = '';
+        data.groups.forEach(group => {
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'group-container';
+            groupDiv.innerHTML = `<h3>Gruppe ${group.name}</h3>`;
+            
+            const standings = Object.entries(group.standings).sort(([,a], [,b]) => b.points - a.points || b.wins - a.wins);
+            let tableHtml = `<table><thead><tr><th>Team</th><th>Sp</th><th>S</th><th>Pkt</th></tr></thead><tbody>`;
+            standings.forEach(([team, stats]) => {
+                tableHtml += `<tr><td>${team}</td><td>${stats.played}</td><td>${stats.wins}</td><td>${stats.points}</td></tr>`;
+            });
+            groupDiv.innerHTML += tableHtml + `</tbody></table>`;
+
+            if (!data.ko_stage) {
+                const matchListDiv = document.createElement('div');
+                matchListDiv.className = 'match-list';
+                group.matches.forEach((match, index) => {
+                    const matchDiv = document.createElement('div');
+                    matchDiv.className = 'match';
+                    const buttonsHtml = match.winner ? `<span class="winner">Sieger: ${match.winner}</span>` :
+                        `<div class="match-winner-btns">
+                            <button onclick="recordGroupWin('${group.name}', ${index}, '${match.teamA}')">${match.teamA}</button>
+                            <button onclick="recordGroupWin('${group.name}', ${index}, '${match.teamB}')">${match.teamB}</button>
+                        </div>`;
+                    matchDiv.innerHTML = `<span class="match-teams">${match.teamA} vs ${match.teamB}</span> ${buttonsHtml}`;
+                    matchListDiv.appendChild(matchDiv);
+                });
+                groupDiv.appendChild(matchListDiv);
+            }
+            groupsContainer.appendChild(groupDiv);
+        });
+        advanceToKoBtn.disabled = !areAllGroupMatchesPlayed();
+    };
+    
+    const renderKoStage = () => {
+        const data = getTournamentData();
+        if (!data || !data.ko_stage) return;
+        
+        const ko = data.ko_stage;
+        const createMatchHtml = (match, stage) => {
+            let buttonsHtml = '';
+            const teamsAreSet = !match.teamA.includes('Sieger') && !match.teamB.includes('Verlierer');
+
+            if (match.winner) {
+                buttonsHtml = `<span class="winner">Sieger: ${match.winner}</span>`;
+            } else if (teamsAreSet) {
+                buttonsHtml = `<div class="match-winner-btns">
+                    <button onclick="recordKoWin('${stage}', '${match.id}', '${match.teamA}')">${match.teamA}</button>
+                    <button onclick="recordKoWin('${stage}', '${match.id}', '${match.teamB}')">${match.teamB}</button>
+                </div>`;
+            }
+            return `<div class="match"><span class="match-teams">${match.teamA} vs ${match.teamB}</span>${buttonsHtml}</div>`;
+        };
+
+        qfContainer.innerHTML = '<h4>Viertelfinale</h4>' + ko.quarterFinals.map(m => createMatchHtml(m, 'quarterFinals')).join('');
+        sfContainer.innerHTML = '<h4>Halbfinale</h4>' + ko.semiFinals.map(m => createMatchHtml(m, 'semiFinals')).join('');
+        thirdPlaceContainer.innerHTML = '<h4>Spiel um Platz 3</h4>' + createMatchHtml(ko.thirdPlace, 'thirdPlace');
+        finalContainer.innerHTML = '<h4>Finale</h4>' + createMatchHtml(ko.final, 'final');
+    };
+    // #endregion
+
+    // #region Initialisierung
+    const initializePage = () => {
+        window.recordGroupWin = recordGroupWin;
+        window.recordKoWin = recordKoWin;
+        const tournamentData = getTournamentData();
+        if (tournamentData) {
+            updateUI(tournamentData.ko_stage ? 'ko-phase' : 'group-phase');
+        } else {
+            renderTeamList();
+            updateUI('setup');
+        }
+    };
+
+    addTeamBtn.addEventListener('click', addTeam);
+    teamNameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTeam(); });
+    startTournamentBtn.addEventListener('click', startTournament);
+    resetTournamentBtn.addEventListener('click', resetTournament);
+    advanceToKoBtn.addEventListener('click', advanceToKoStage);
+    
+    initializePage();
+    // #endregion
+});
+</script>
 </body>
 </html>
