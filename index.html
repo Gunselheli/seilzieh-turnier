@@ -63,6 +63,7 @@
       align-items: center;
       gap: 1em;
       flex: 1;
+      position: relative;
     }
     .match-box {
       background: rgba(255,255,255,0.9);
@@ -117,43 +118,27 @@
     let teams = JSON.parse(localStorage.getItem("teams")) || [];
     let groupResults = JSON.parse(sessionStorage.getItem("groupResults")) || {};
 
-    function downloadGroupSchedule() {
-      const doc = new jsPDF();
-      doc.setFontSize(14);
-      doc.text("Gruppen-Spielplan", 10, 10);
-      let y = 20;
-      const storedGroups = JSON.parse(sessionStorage.getItem("groups"));
-      for (const [group, members] of Object.entries(storedGroups)) {
-        doc.text(`Gruppe ${group}`, 10, y);
-        y += 6;
-        for (let i = 0; i < members.length; i++) {
-          for (let j = i + 1; j < members.length; j++) {
-            doc.text(`${members[i]} vs ${members[j]}`, 20, y);
-            y += 6;
-          }
-        }
-        y += 4;
+    function startTournament() {
+      if (teams.length < 2 || teams.length > 40) {
+        alert("Bitte zwischen 2 und 40 Teams eingeben.");
+        return;
       }
-      doc.save("spielplan.pdf");
+      const maxPerGroup = 6;
+      const numGroups = Math.ceil(teams.length / maxPerGroup);
+      const shuffled = [...teams].sort(() => 0.5 - Math.random());
+      const groups = {};
+      for (let i = 0; i < numGroups; i++) {
+        groups[String.fromCharCode(65 + i)] = [];
+      }
+      let groupIndex = 0;
+      for (const team of shuffled) {
+        const group = String.fromCharCode(65 + groupIndex);
+        groups[group].push(team);
+        groupIndex = (groupIndex + 1) % numGroups;
+      }
+      sessionStorage.setItem("groups", JSON.stringify(groups));
+      location.reload();
     }
-
-    function renderBracket(rounds) {
-      const bracketDiv = document.getElementById("bracket");
-      bracketDiv.innerHTML = "";
-      rounds.forEach((round, rIndex) => {
-        const roundDiv = document.createElement("div");
-        roundDiv.className = "round";
-        round.forEach(match => {
-          const box = document.createElement("div");
-          box.className = "match-box";
-          box.textContent = `${match[0]} vs ${match[1]}`;
-          roundDiv.appendChild(box);
-        });
-        bracketDiv.appendChild(roundDiv);
-      });
-    }
-
-    // ... deine vorhandene KO-Phase-Logik ruft dann renderBracket([viertel, halb, finale]) auf
   </script>
 </body>
 </html>
