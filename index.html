@@ -1,111 +1,406 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Seilzieh Turnier</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seilzieh Turnier Webseite</title>
+    <style>
+        /* Grundlegende Styles für eine bessere Lesbarkeit */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        main {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        /* Versteckter Zustand für Sektionen */
+        .hidden {
+            display: none;
+        }
+
+        /* Team-Eingabe und Liste */
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        #teamNameInput {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        #addTeamBtn {
+            background-color: #2ecc71;
+            color: white;
+        }
+        #addTeamBtn:hover {
+            background-color: #27ae60;
+        }
+        #teamList {
+            list-style: none;
+            padding: 0;
+        }
+        #teamList li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        .delete-btn {
+            background-color: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            line-height: 25px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        /* Turnier-Steuerung */
+        #tournament-controls {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+        }
+        #startTournamentBtn {
+            background-color: #3498db;
+            color: white;
+        }
+        #startTournamentBtn:hover {
+            background-color: #2980b9;
+        }
+        #resetTournamentBtn {
+            background-color: #f39c12;
+            color: white;
+        }
+        #resetTournamentBtn:hover {
+            background-color: #e67e22;
+        }
+
+        /* Gruppenanzeige */
+        #groupsContainer {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .group-container {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .group-container h3 {
+            margin-top: 0;
+            border-color: #95a5a6;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #ecf0f1;
+        }
+    </style>
 </head>
 <body>
-  <h1>Seilzieh Turnier</h1>
 
-  <input type="text" id="team-name" placeholder="Teamname" />
-  <button onclick="addTeam()">Team hinzufügen</button>
-  <button onclick="startTournament()">Turnier starten</button>
-  <button onclick="resetTournament()">Turnier neustarten</button>
+    <main>
+        <h1>Seilzieh Turnier Webseite</h1>
 
-  <div id="team-list"></div>
-  <div id="group-phase" class="hidden">
-    <h2>Gruppenphase</h2>
-    <div id="groups"></div>
-  </div>
+        <!-- SEKTION 1: TEAMVERWALTUNG -->
+        <section id="team-setup">
+            <h2>1. Teamverwaltung</h2>
+            <p>Füge bis zu 40 Teams hinzu. Die Teams werden im Browser gespeichert.</p>
+            <div class="input-group">
+                <input type="text" id="teamNameInput" placeholder="Teamnamen eingeben...">
+                <button id="addTeamBtn">Team hinzufügen</button>
+            </div>
+            <ul id="teamList">
+                <!-- Team-Liste wird hier dynamisch von JavaScript eingefügt -->
+            </ul>
+        </section>
 
-  <script>
-    const { jsPDF } = window.jspdf || {};
-    let teams = JSON.parse(localStorage.getItem("teams")) || [];
+        <!-- SEKTION 2: TURNIER STARTEN/ZURÜCKSETZEN -->
+        <section id="tournament-controls">
+            <div>
+                <h2>2. Turnier starten</h2>
+                <button id="startTournamentBtn">Turnier starten</button>
+            </div>
+             <div>
+                <h2>4. Turnier zurücksetzen</h2>
+                <button id="resetTournamentBtn">Turnier neustarten</button>
+            </div>
+        </section>
 
-    function addTeam() {
-      const input = document.getElementById("team-name");
-      const name = input.value.trim();
-      if (name && !teams.includes(name) && teams.length < 40) {
-        teams.push(name);
-        input.value = "";
-        localStorage.setItem("teams", JSON.stringify(teams));
-        renderTeamList();
-      }
-    }
+        <!-- SEKTION 3: GRUPPENANZEIGE (standardmäßig versteckt) -->
+        <section id="group-phase" class="hidden">
+            <h2>3. Gruppenphase</h2>
+            <div id="groupsContainer">
+                <!-- Gruppen werden hier dynamisch von JavaScript eingefügt -->
+            </div>
+        </section>
 
-    function removeTeam(index) {
-      teams.splice(index, 1);
-      localStorage.setItem("teams", JSON.stringify(teams));
-      renderTeamList();
-    }
+    </main>
 
-    function renderTeamList() {
-      const listDiv = document.getElementById("team-list");
-      listDiv.innerHTML = `<strong>Teams (${teams.length}):</strong><ul>` +
-        teams.map((t, i) => `<li>${t} <button onclick="removeTeam(${i})">x</button></li>`).join("") + "</ul>";
-    }
+    <script>
+        // ##################################################################
+        // DOKUMENTATION & KONSTANTEN
+        // ##################################################################
+        /*
+        Zweck:
+        Diese Webseite ermöglicht es, Teams für ein Seilziehturnier einzugeben, sie automatisch 
+        in Gruppen zu unterteilen (max. 6 Teams pro Gruppe), und die Gruppeneinteilung visuell anzuzeigen. 
+        Die Daten werden lokal im Browser gespeichert und bleiben beim Neuladen erhalten.
 
-    function resetTournament() {
-      localStorage.removeItem("teams");
-      sessionStorage.clear();
-      window.location.href = window.location.pathname;
-    }
+        Speicherorte:
+        - localStorage: speichert eingegebene Teams dauerhaft im Browser ('teams')
+        - sessionStorage: speichert Gruppeneinteilung nur für die aktuelle Sitzung ('groups')
+        */
 
-    window.onload = () => {
-      renderTeamList();
+        const MAX_TEAMS = 40;
+        const MAX_TEAMS_PER_GROUP = 6;
 
-      const existingGroups = sessionStorage.getItem("groups");
-      if (existingGroups) {
-        showGroups(JSON.parse(existingGroups));
-      }
-    }
+        // ##################################################################
+        // DOM ELEMENTE
+        // ##################################################################
+        const teamNameInput = document.getElementById('teamNameInput');
+        const addTeamBtn = document.getElementById('addTeamBtn');
+        const teamList = document.getElementById('teamList');
+        const startTournamentBtn = document.getElementById('startTournamentBtn');
+        const resetTournamentBtn = document.getElementById('resetTournamentBtn');
+        const teamSetupSection = document.getElementById('team-setup');
+        const groupPhaseSection = document.getElementById('group-phase');
+        const groupsContainer = document.getElementById('groupsContainer');
 
-    function startTournament() {
-      if (teams.length < 2 || teams.length > 40) {
-        alert("Bitte zwischen 2 und 40 Teams eingeben.");
-        return;
-      }
-      const maxPerGroup = 6;
-      const numGroups = Math.ceil(teams.length / maxPerGroup);
-      const shuffled = [...teams].sort(() => 0.5 - Math.random());
-      const groups = {};
-      for (let i = 0; i < numGroups; i++) {
-        groups[String.fromCharCode(65 + i)] = [];
-      }
-      let groupIndex = 0;
-      for (const team of shuffled) {
-        const group = String.fromCharCode(65 + groupIndex);
-        groups[group].push(team);
-        groupIndex = (groupIndex + 1) % numGroups;
-      }
-      sessionStorage.setItem("groups", JSON.stringify(groups));
-      showGroups(groups);
-    }
+        // ##################################################################
+        // SPEICHER-FUNKTIONEN (LocalStorage & SessionStorage)
+        // ##################################################################
+        
+        // Holt Teams aus dem localStorage
+        const getTeamsFromStorage = () => JSON.parse(localStorage.getItem('teams')) || [];
+        
+        // Speichert Teams im localStorage
+        const saveTeamsToStorage = (teams) => localStorage.setItem('teams', JSON.stringify(teams));
+        
+        // Holt Gruppen aus dem sessionStorage
+        const getGroupsFromStorage = () => JSON.parse(sessionStorage.getItem('groups')) || [];
+        
+        // Speichert Gruppen im sessionStorage
+        const saveGroupsToStorage = (groups) => sessionStorage.setItem('groups', JSON.stringify(groups));
+        
+        // ##################################################################
+        // FUNKTIONEN ZUR TEAMVERWALTUNG
+        // ##################################################################
+        
+        // Rendert die Teamliste auf der UI
+        const renderTeamList = () => {
+            const teams = getTeamsFromStorage();
+            teamList.innerHTML = ''; // Leert die bestehende Liste
+            
+            teams.forEach(team => {
+                const li = document.createElement('li');
+                li.textContent = team;
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'x';
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.onclick = () => removeTeam(team);
+                
+                li.appendChild(deleteBtn);
+                teamList.appendChild(li);
+            });
+        };
 
-    function showGroups(groups) {
-      document.getElementById("group-phase").classList.remove("hidden");
-      const container = document.getElementById("groups");
-      container.innerHTML = "";
-      for (const [group, members] of Object.entries(groups)) {
-        const section = document.createElement("section");
-        section.className = "group";
-        section.innerHTML = `<h3>Gruppe ${group}</h3>`;
-        const table = document.createElement("table");
-        const thead = document.createElement("thead");
-        thead.innerHTML = "<tr><th>Team</th><th>Punkte</th></tr>";
-        table.appendChild(thead);
-        const tbody = document.createElement("tbody");
-        members.forEach(team => {
-          const row = document.createElement("tr");
-          row.innerHTML = `<td>${team}</td><td>0</td>`;
-          tbody.appendChild(row);
+        // Fügt ein neues Team hinzu
+        const addTeam = () => {
+            const teamName = teamNameInput.value.trim();
+            if (!teamName) {
+                alert("Bitte gib einen Teamnamen ein.");
+                return;
+            }
+            
+            const teams = getTeamsFromStorage();
+            if (teams.length >= MAX_TEAMS) {
+                alert(`Die maximale Anzahl von ${MAX_TEAMS} Teams ist erreicht.`);
+                return;
+            }
+            if (teams.includes(teamName)) {
+                alert("Dieses Team wurde bereits hinzugefügt.");
+                return;
+            }
+
+            teams.push(teamName);
+            saveTeamsToStorage(teams);
+            renderTeamList();
+            teamNameInput.value = ''; // Feld leeren
+            teamNameInput.focus();
+        };
+
+        // Entfernt ein Team aus der Liste
+        const removeTeam = (teamNameToRemove) => {
+            let teams = getTeamsFromStorage();
+            teams = teams.filter(team => team !== teamNameToRemove);
+            saveTeamsToStorage(teams);
+            renderTeamList();
+        };
+
+        // ##################################################################
+        // FUNKTIONEN ZUM TURNIERABLAUF
+        // ##################################################################
+        
+        // Mischt ein Array zufällig (Fisher-Yates-Algorithmus)
+        const shuffleArray = (array) => {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]]; // Tauscht Elemente
+            }
+            return array;
+        };
+        
+        // Startet das Turnier: mischt Teams und teilt sie in Gruppen ein
+        const startTournament = () => {
+            const teams = getTeamsFromStorage();
+            if (teams.length < 2) {
+                alert("Es müssen mindestens 2 Teams vorhanden sein, um ein Turnier zu starten.");
+                return;
+            }
+
+            const shuffledTeams = shuffleArray([...teams]);
+            const groups = [];
+            let groupIndex = 0;
+
+            for (let i = 0; i < shuffledTeams.length; i += MAX_TEAMS_PER_GROUP) {
+                const groupTeams = shuffledTeams.slice(i, i + MAX_TEAMS_PER_GROUP);
+                groups.push({
+                    name: String.fromCharCode(65 + groupIndex), // A, B, C, ...
+                    teams: groupTeams
+                });
+                groupIndex++;
+            }
+            
+            saveGroupsToStorage(groups);
+            renderGroups();
+            
+            // UI-Sektionen umschalten
+            teamSetupSection.classList.add('hidden');
+            groupPhaseSection.classList.remove('hidden');
+        };
+
+        // Rendert die Gruppenansicht
+        const renderGroups = () => {
+            const groups = getGroupsFromStorage();
+            groupsContainer.innerHTML = ''; // Leert den Container
+            
+            if (groups.length === 0) return;
+
+            groups.forEach(group => {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'group-container';
+                
+                const groupTitle = document.createElement('h3');
+                groupTitle.textContent = `Gruppe ${group.name}`;
+                groupDiv.appendChild(groupTitle);
+                
+                const table = document.createElement('table');
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>Team</th>
+                            <th>Punkte</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${group.teams.map(team => `
+                            <tr>
+                                <td>${team}</td>
+                                <td>0</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                `;
+                groupDiv.appendChild(table);
+                groupsContainer.appendChild(groupDiv);
+            });
+        };
+
+        // Setzt das gesamte Turnier zurück
+        const resetTournament = () => {
+            if (confirm("Möchtest du das Turnier wirklich zurücksetzen? Alle Teams und Gruppen werden gelöscht.")) {
+                localStorage.clear();
+                sessionStorage.clear();
+                // Seite neu laden (true erzwingt Neuladen vom Server, um Cache-Probleme zu vermeiden)
+                location.reload(true);
+            }
+        };
+
+        // ##################################################################
+        // INITIALISIERUNG BEIM SEITENLADEN
+        // ##################################################################
+        
+        const initializePage = () => {
+            // Prüfen, ob eine Turniersitzung bereits aktiv ist
+            const groups = getGroupsFromStorage();
+            if (groups.length > 0) {
+                // Wenn ja, direkt die Gruppenphase anzeigen
+                renderGroups();
+                teamSetupSection.classList.add('hidden');
+                groupPhaseSection.classList.remove('hidden');
+            } else {
+                // Ansonsten die Teamliste aus dem Speicher laden
+                renderTeamList();
+            }
+        };
+
+        // ##################################################################
+        // EVENT LISTENERS
+        // ##################################################################
+        addTeamBtn.addEventListener('click', addTeam);
+        teamNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addTeam();
+            }
         });
-        table.appendChild(tbody);
-        section.appendChild(table);
-        container.appendChild(section);
-      }
-    }
-  </script>
+        startTournamentBtn.addEventListener('click', startTournament);
+        resetTournamentBtn.addEventListener('click', resetTournament);
+        
+        // Startfunktion beim Laden der Seite aufrufen
+        document.addEventListener('DOMContentLoaded', initializePage);
+
+    </script>
 </body>
 </html>
