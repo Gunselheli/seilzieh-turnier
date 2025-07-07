@@ -1,16 +1,27 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <!-- HEAD BLEIBT UNVERÄNDERT -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seilzieh Turnier</title>
 </head>
 <body>
-  <!-- VORHANDENER BODY BLEIBT BIS ZUM SCRIPT-BLOCK GLEICH -->
+  <h1>Seilzieh Turnier</h1>
+
+  <input type="text" id="team-name" placeholder="Teamname" />
+  <button onclick="addTeam()">Team hinzufügen</button>
+  <button onclick="startTournament()">Turnier starten</button>
+  <button onclick="resetTournament()">Turnier neustarten</button>
+
+  <div id="team-list"></div>
+  <div id="group-phase" class="hidden">
+    <h2>Gruppenphase</h2>
+    <div id="groups"></div>
+  </div>
 
   <script>
-    const { jsPDF } = window.jspdf;
+    const { jsPDF } = window.jspdf || {};
     let teams = JSON.parse(localStorage.getItem("teams")) || [];
-    let groupResults = JSON.parse(sessionStorage.getItem("groupResults")) || {};
 
     function addTeam() {
       const input = document.getElementById("team-name");
@@ -38,37 +49,16 @@
     function resetTournament() {
       localStorage.removeItem("teams");
       sessionStorage.clear();
-      location.reload();
+      window.location.href = window.location.pathname;
     }
 
     window.onload = () => {
       renderTeamList();
 
-      // Wenn Gruppen vorhanden sind, fortsetzen
       const existingGroups = sessionStorage.getItem("groups");
       if (existingGroups) {
         showGroups(JSON.parse(existingGroups));
       }
-    }
-
-    function downloadGroupSchedule() {
-      const doc = new jsPDF();
-      doc.setFontSize(14);
-      doc.text("Gruppen-Spielplan", 10, 10);
-      let y = 20;
-      const storedGroups = JSON.parse(sessionStorage.getItem("groups"));
-      for (const [group, members] of Object.entries(storedGroups)) {
-        doc.text(`Gruppe ${group}`, 10, y);
-        y += 6;
-        for (let i = 0; i < members.length; i++) {
-          for (let j = i + 1; j < members.length; j++) {
-            doc.text(`${members[i]} vs ${members[j]}`, 20, y);
-            y += 6;
-          }
-        }
-        y += 4;
-      }
-      doc.save("spielplan.pdf");
     }
 
     function startTournament() {
